@@ -9,7 +9,7 @@
 	- TODO - encrypt the password? use a service that allows you to type a pin and copy it to... ramfs,fifo,fd?
 	- TODO - add options to zerofill setup_data after auto-pass
 
-The restrictions are necessary becuase creating my own device-mapper was throwing a type error. Instead of using my own device-mapper, I used module reflection to replace the open-luks-device call... I suspect that the module reflection is also the source of the e2fsck error since all the gexp compiling references the original implementation of open-luks-device.
+The restrictions are necessary becuase my custom device-mapper was throwing a type error. Instead of using my device-mapper, I used module reflection to replace the open-[type]-device call... The e2fsck error is almost certainly due to the hard-coded replacement of (open source targets) with the module-ref "open" replacing the type-determined open...
 
 # System Crafters Guix Installer
 
