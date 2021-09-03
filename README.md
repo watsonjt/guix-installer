@@ -10,8 +10,6 @@
 	- TODO - add options to zerofill setup_data after auto-pass
     - DONE - ~~reexport linux-initrd, and have only the auto-pass-initrd and my-open proc...~~
 
-The restrictions are necessary becuase my custom device-mapper was throwing a type error. Instead of using my device-mapper, I used module reflection to replace the open-[type]-device call... The e2fsck error is almost certainly due to the hard-coded replacement of (open source targets) with the module-ref "open" replacing the type-determined open...
-
 # System Crafters Guix Installer
 
 This repository runs _automated CI builds_ to produce a
