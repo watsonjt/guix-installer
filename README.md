@@ -1,3 +1,12 @@
+# Autopass - ONLY USE IF SINGLE DEVICE/FDE -
+- Follow all the instructions from SystemCrafters
+  - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue.
+  - The password is stored in setup_data
+    - TODO - chmod so only root can read
+	- TODO - Password should always be stored in ..setup_data/0
+     - REBOOT the computer if you mistype the password as it is assumed in that file
+	- TODO - encrypt the password? use a service that allows you to type a pin and copy it to... ramfs,fifo,fd?
+
 # System Crafters Guix Installer
 
 This repository runs _automated CI builds_ to produce a
