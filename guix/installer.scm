@@ -21,7 +21,15 @@
 (define-module (nongnu system install)
   #:use-module (gnu services)
   #:use-module (gnu system)
+  #:use-module (gnu system file-systems)
+  #:use-module (gnu system keyboard)
   #:use-module (gnu system install)
+  #:use-module (gnu bootloader)
+  #:use-module (gnu bootloader grub)
+  #:use-module (gnu packages)
+  #:use-module (gnu packages compression)
+  #:use-module (gnu packages guile)
+  #:use-module (gnu packages bootloaders)
   #:use-module (gnu packages version-control)
   #:use-module (gnu packages vim)
   #:use-module (gnu packages curl)
@@ -31,13 +39,35 @@
   #:use-module (gnu packages package-management)
   #:use-module (nongnu packages linux)
   #:use-module (guix)
+  #:use-module (guix modules)
+  #:use-module (my linux-initrd)
   #:export (installation-os-nonfree))
+
+(define-public grub-logger
+  (package
+   (inherit grub)
+   (source (origin
+	     (inherit (package-source grub))
+             (patches (append '("./grub-add-setup-data-log.patch") (search-patches
+                       "grub-efi-fat-serial-number.patch"
+                       "grub-setup-root.patch")))))))
+
+(define grub-bootloader-log
+  (bootloader
+   (inherit grub-bootloader)
+   (name '"grub-log")
+   (package grub-logger)))
+
 
 (define installation-os-nonfree
   (operating-system
     (inherit installation-os)
     (kernel linux)
+    (initrd initrd-auto-pass)
     (firmware (list linux-firmware))
+    (bootloader (bootloader-configuration
+		 (bootloader grub-bootloader-log)
+		 (target "dev/sda")))
 
     ;; Add the 'net.ifnames' argument to prevent network interfaces
     ;; from having really long names.  This can cause an issue with

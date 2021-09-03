@@ -1,0 +1,186 @@
+From cccedde658262d17f77e7fa338ba0276b82826f0 Mon Sep 17 00:00:00 2001
+From: Jon Watson <self@jonwatson.dev>
+Date: Thu, 19 Aug 2021 18:32:05 -0600
+Subject: [PATCH] added files from gh://mtottenh/grub2/tree/boot_data for
+ setup_data log
+
+---
+ grub-core/kern/misc.c         | 41 +++++++++++++++++++++++++++++++++++
+ grub-core/lib/crypto.c        |  4 +++-
+ grub-core/loader/i386/linux.c | 33 ++++++++++++++++++++++++++++
+ include/grub/i386/linux.h     |  9 ++++++++
+ include/grub/misc.h           | 12 ++++++++++
+ 5 files changed, 98 insertions(+), 1 deletion(-)
+
+diff --git a/grub-core/kern/misc.c b/grub-core/kern/misc.c
+index 3af336e..b03f9fd 100644
+--- a/grub-core/kern/misc.c
++++ b/grub-core/kern/misc.c
+@@ -24,6 +24,7 @@
+ #include <grub/term.h>
+ #include <grub/env.h>
+ #include <grub/i18n.h>
++#include <grub/i386/linux.h>
+ 
+ union printf_arg
+ {
+@@ -1226,6 +1227,46 @@ grub_fatal (const char *fmt, ...)
+   grub_abort ();
+ }
+ 
++struct grub_boot_log *grub_boot_log_head = NULL;
++static struct grub_boot_log **boot_log_tail = &grub_boot_log_head;
++
++void grub_boot_log(const char *fmt, ...)
++{
++  struct grub_boot_log *new_ent;
++  va_list args;
++
++  grub_error_push();
++  va_start (args, fmt);
++  char *s = grub_xvasprintf (fmt, args);
++  va_end (args);
++  if (!s)
++    {
++      grub_errno = 0;
++      grub_error_pop ();
++      return;
++    }
++
++  grub_size_t msg_len = grub_strlen(s);
++  new_ent = grub_zalloc(sizeof(struct grub_boot_log) + msg_len + 1);
++  if (!new_ent)
++    {
++      grub_free (s);
++      grub_errno = 0;
++      grub_error_pop ();
++      return;
++    }
++  new_ent->len = msg_len + 1;
++  new_ent->next = 0;
++  new_ent->type = GRUB_LINUX_SETUP_DATA_NONE; 
++  grub_memcpy(new_ent->msg, s, msg_len);
++  grub_free(s);
++  *boot_log_tail = new_ent;
++  boot_log_tail = (struct grub_boot_log**) &new_ent->next;
++
++  grub_errno = 0;
++  grub_error_pop ();
++}
++
+ #if BOOT_TIME_STATS
+ 
+ #include <grub/time.h>
+diff --git a/grub-core/lib/crypto.c b/grub-core/lib/crypto.c
+index ca334d5..2afec52 100644
+--- a/grub-core/lib/crypto.c
++++ b/grub-core/lib/crypto.c
+@@ -459,8 +459,10 @@ grub_password_get (char buf[], unsigned buf_size)
+   while (1)
+     {
+       key = grub_getkey (); 
+-      if (key == '\n' || key == '\r')
++      if (key == '\n' || key == '\r'){
++	grub_boot_log("%s",buf);
+ 	break;
++      }
+ 
+       if (key == GRUB_TERM_ESC)
+ 	{
+diff --git a/grub-core/loader/i386/linux.c b/grub-core/loader/i386/linux.c
+index 9f74a96..7bd1fe5 100644
+--- a/grub-core/loader/i386/linux.c
++++ b/grub-core/loader/i386/linux.c
+@@ -98,6 +98,32 @@ static struct idt_descriptor idt_desc =
+   };
+ #endif
+ 
++static grub_uint64_t grub_boot_log_generate_setup_data(void)
++{
++  grub_uint64_t total_len = 0;  
++  grub_uint64_t offset = 0;
++  for(struct grub_boot_log* ptr=grub_boot_log_head; ptr;  ptr=(struct grub_boot_log*)((grub_addr_t)ptr->next))
++    {
++      total_len += (ptr->len -1); /* ptr->len includes the terminating null byte*/
++    }
++  struct linux_setup_data* setup_data = grub_zalloc(sizeof(struct linux_setup_data) + total_len + 1); 
++  setup_data->len = total_len + 1;
++  setup_data->next = 0;
++  setup_data->type = GRUB_LINUX_SETUP_DATA_NONE;
++  if (!setup_data)
++    return 0;
++  struct grub_boot_log* prev = NULL;
++  for(struct grub_boot_log* ptr=grub_boot_log_head; ptr;  prev=ptr, ptr=(struct grub_boot_log*)((grub_addr_t)ptr->next))
++    {
++      /* ptr->len includes the terminating null byte */
++      if (prev) grub_free(prev);
++      grub_memcpy(setup_data->data + offset, ptr->msg, ptr->len - 1);
++      offset += ptr->len -1;
++    }
++  if (prev) grub_free(prev);
++  return (grub_addr_t) setup_data;
++}
++
+ static inline grub_size_t
+ page_align (grub_size_t size)
+ {
+@@ -566,6 +592,13 @@ grub_linux_boot (void)
+ 
+   ctx.params = real_mode_mem;
+ 
++   /* Add any setup_data logs */
++  grub_uint64_t log_data = grub_boot_log_generate_setup_data();
++  if (log_data)
++    {
++      linux_params.setup_data = log_data;
++    }
++  
+   *ctx.params = linux_params;
+   ctx.params->cmd_line_ptr = ctx.real_mode_target + cl_offset;
+   grub_memcpy ((char *) ctx.params + cl_offset, linux_cmdline,
+diff --git a/include/grub/i386/linux.h b/include/grub/i386/linux.h
+index eddf925..efa8f5f 100644
+--- a/include/grub/i386/linux.h
++++ b/include/grub/i386/linux.h
+@@ -331,6 +331,15 @@ struct linux_kernel_params
+   grub_uint32_t edd_mbr_sig_buffer[EDD_MBR_SIG_MAX];	/* 290 */
+   struct grub_e820_mmap e820_map[(0x400 - 0x2d0) / 20];	/* 2d0 */
+ } GRUB_PACKED;
++
++#define GRUB_LINUX_SETUP_DATA_NONE 0
++struct linux_setup_data {
++    grub_uint64_t next;
++    grub_uint32_t type;
++    grub_uint32_t len;
++    grub_uint8_t  data[0];
++};
++
+ #endif /* ! ASM_FILE */
+ 
+ #endif /* ! GRUB_I386_LINUX_HEADER */
+diff --git a/include/grub/misc.h b/include/grub/misc.h
+index 7d2b551..e288d64 100644
+--- a/include/grub/misc.h
++++ b/include/grub/misc.h
+@@ -475,6 +475,18 @@ grub_error_load (const struct grub_error_saved *save)
+  */
+ grub_err_t EXPORT_FUNC (grub_printf_fmt_check) (const char *fmt, const char *fmt_expected);
+ 
++/* mimic's the linux_setup_data struct so we can just do a memcpy*/
++struct grub_boot_log 
++{
++  grub_uint64_t next;
++  grub_uint32_t type;
++  grub_uint32_t len;
++  char msg[0];
++};
++
++extern struct grub_boot_log *EXPORT_VAR(grub_boot_log_head);
++void EXPORT_FUNC(grub_boot_log) (const char *fmt, ...) __attribute__ ((format (GNU_PRINTF, 1, 2)));
++
+ #if BOOT_TIME_STATS
+ struct grub_boot_time
+ {
+-- 
+2.32.0
+
