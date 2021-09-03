@@ -1,11 +1,15 @@
 # Autopass - ONLY USE IF SINGLE DEVICE/FDE -
+- Thanks to [mtottenh](https://github.com/mtottenh/grub2/tree/boot_data) for the grub patch code!
 - Follow all the instructions from SystemCrafters
   - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue.
   - The password is stored in setup_data
     - TODO - chmod so only root can read
 	- TODO - Password should always be stored in ..setup_data/0
-     - REBOOT the computer if you mistype the password as it is assumed in that file
+     - REBOOT the computer if you mistype the password as it is assumed in the first file, setup_data is added for each password entry i.e. ..0/ ..1/ ..2/ 
 	- TODO - encrypt the password? use a service that allows you to type a pin and copy it to... ramfs,fifo,fd?
+	- TODO - add options to zerofill setup_data after auto-pass
+
+The restrictions are necessary becuase creating my own device-mapper was throwing a type error. Instead of using my own device-mapper, I used module reflection to replace the open-luks-device call... I suspect that the module reflection is also the source of the e2fsck error since all the gexp compiling references the original implementation of open-luks-device.
 
 # System Crafters Guix Installer
 
