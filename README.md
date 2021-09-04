@@ -1,11 +1,11 @@
-# Autopass - ONLY USE IF SINGLE DEVICE/FDE -
+# Autopass
 - Thanks to [mtottenh](https://github.com/mtottenh/grub2/tree/boot_data) for the grub patch code!
 - Follow all the instructions from SystemCrafters
   - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue... this appears after the premount call in the init script.
   - The password is stored in setup_data
     - DONE - ~~chmod so only root can read~~
 	- DONE - ~~Password should always be stored in ..setup_data/0~~
-     - ~~REBOOT the computer if you mistype the password as it is assumed in the first file, setup_data is added for each password entry i.e. ..0/ ..1/ ..2/ ~~
+     - ~~REBOOT the computer if you mistype the password as it is assumed in the first file, setup_data is added for each password entry i.e. ..0/ ..1/ ..2/~~
 	- TODO - encrypt the password? use a service that allows you to type a pin and copy it to... ramfs,fifo,fd?
 	- TODO - add options to zerofill setup_data after auto-pass, use proc/cmdline opt --zap
     - DONE - ~~reexport linux-initrd, and have only the auto-pass-initrd and my-open proc...~~
