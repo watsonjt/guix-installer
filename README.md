@@ -3,17 +3,18 @@
 - Follow all the instructions from SystemCrafters - follow the example/system.scm to add functionality post system install
   - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue... this appears after the premount call in the init script.
     - This may be due to type mismatch in the file-system configuration in my system config and the device-mapping conf...
-  - The password is stored in setup_data
+  - The password is stored in setup_data, part of the linux boot-protocol... i.e this is not multiboot compliant.
     - DONE - ~~chmod so only root can read~~
 	- DONE - ~~Password should always be stored in ..setup_data/0~~
      - ~~REBOOT the computer if you mistype the password as it is assumed in the first file, setup_data is added for each password entry i.e. ..0/ ..1/ ..2/~~
-	- TODO - encrypt the password? use a service that allows you to type a pin and copy it to... ramfs,fifo,fd?
-	       - Requires pin-set in grub, i.e. custom command/module that will call boot after getting pin and encrypting the setup_data 0 entry
-	       - This also requires atleast entering the pin during initrd init script, I dont see the point, if someone gets root access they probably will crack a less entropy pin... probably not worth the extra work and complexity of adding a grub module... 
+	- TODO ???? encrypt the password with a pin
+		- Requires pin-set in grub, i.e. custom command/module that will call boot after getting pin and encrypting the setup_data 0 entry
+		- Maybe could put the pin in the mmaped BIOS keyboard buffer? Read it in initrd, and zero it out (can we write to it?)
+		- If the above cant be done, then the pin has to be entered twice, which defeats the purpose of this repo...
 	- ~~TODO~~ - add options to zerofill setup_data after auto-pass, use proc/cmdline opt --zap
                - Setup_data may not be modified after grub hand-off, --zap cant happen till the initrd init script, so without ability to write to kernel memory (is it possible?) this TODO is a TODONT 
     - DONE - ~~reexport linux-initrd, and have only the auto-pass-initrd and my-open proc...~~
-- example folder has an system.scm config to see changes necessary to reconigure 
+- example folder has an system.scm config to see changes necessary to reconfigure 
   - I have not yet tested a full install from the SC guix-installer iso generated from this repo...
   - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** ill get back to you if my computer was nuked...
  
