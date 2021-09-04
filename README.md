@@ -9,6 +9,7 @@
      - ~~REBOOT the computer if you mistype the password as it is assumed in the first file, setup_data is added for each password entry i.e. ..0/ ..1/ ..2/~~
 	- TODO - encrypt the password? use a service that allows you to type a pin and copy it to... ramfs,fifo,fd?
 	       - Requires pin-set in grub, i.e. custom command/module that will call boot after getting pin and encrypting the setup_data 0 entry
+	       - This also requires atleast entering the pin during initrd init script, I dont see the point, if someone gets root access they probably will crack a less entropy pin... probably not worth the extra work and complexity of adding a grub module... 
 	- ~~TODO~~ - add options to zerofill setup_data after auto-pass, use proc/cmdline opt --zap
                - Setup_data may not be modified after grub hand-off, --zap cant happen till the initrd init script, so without ability to write to kernel memory (is it possible?) this TODO is a TODONT 
     - DONE - ~~reexport linux-initrd, and have only the auto-pass-initrd and my-open proc...~~
