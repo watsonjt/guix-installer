@@ -1,7 +1,8 @@
 # Autopass
 - Thanks to [mtottenh](https://github.com/mtottenh/grub2/tree/boot_data) for the grub patch code!
-- Follow all the instructions from SystemCrafters
+- Follow all the instructions from SystemCrafters - follow the example/system.scm to add functionality post system install
   - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue... this appears after the premount call in the init script.
+    - This may be due to type mismatch in the file-system configuration in my system config and the device-mapping conf...
   - The password is stored in setup_data
     - DONE - ~~chmod so only root can read~~
 	- DONE - ~~Password should always be stored in ..setup_data/0~~
