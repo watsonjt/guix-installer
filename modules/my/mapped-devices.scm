@@ -44,6 +44,7 @@
   #:use-module (srfi srfi-35)
   #:use-module (ice-9 match)
   #:use-module (ice-9 format)
+  #:use-module (my initrd-coreutils-static)
   #:re-export (%mapped-device
             mapped-device
             mapped-device?
@@ -67,7 +68,11 @@
             luks-device-mapping
             raid-device-mapping
             lvm-device-mapping)
-   #:export (luks-auto-pass-device-mapping))
+  #:export (luks-auto-pass-device-mapping
+	    %setup_data_0))
+
+(define %setup_data_0 "/sys/kernel/boot_params/setup_data/0/data") ;;gexp cant find source to this file, so hardcode for now
+
 
 (define (open-luks-auto-pass-device source targets)
   "Return a gexp that maps SOURCE to TARGET as a LUKS device, using
@@ -96,7 +101,7 @@
 	   ;;;;  and inhereits the thunk-process stdin/input-port... is there an easier way
 	   ;;;;   while still using execvp?
 	   ;;;;NOTE-using with-input-from-port so the port can be non-buffering
-
+	     
 	    (define output-from-cryptsetup (with-input-from-port 
 	       (open-file "/sys/kernel/boot_params/setup_data/0/data" "r0") ; <--password from grub
 	      (lambda () (open-pipe* OPEN_READ #$(file-append cryptsetup-static "/sbin/cryptsetup")
@@ -119,9 +124,14 @@
                                                      (loop (- tries-left 1))))))
                                    (error "LUKS partition not found" source))
                                source)
-                             #$target))))
-	   
-           (eof-object? (read-line output-from-cryptsetup)))))))
+                           #$target))))
+ 
+	    ;; if stdin cryptsetup and chmod succeeded then return true, otherwise call old open-luks-device method
+	    (if (and (eof-object? (read-line output-from-cryptsetup))
+		     (eof-object? (read-line (open-pipe* OPEN_READ #$(file-append %initrd-static-binaries "/bin/chmod") "400"
+						      "/sys/kernel/boot_params/setup_data/0/data"))))
+		#t
+		((module-ref (resolve-module '(gnu system mapped-devices)) 'open-luks-device) source targets)))))))
 
 (define close-luks-device (module-ref (resolve-module '(gnu system mapped-devices)) 'close-luks-device)) 
 (define check-luks-device (module-ref (resolve-module '(gnu system mapped-devices)) 'check-luks-device))
@@ -132,6 +142,5 @@
    (open open-luks-auto-pass-device)
    (close close-luks-device)
    (check check-luks-device)))
-
 
 ;;; my  mapped-devices.scm ends here

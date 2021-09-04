@@ -57,64 +57,6 @@
 	    )
   #:export (initrd-auto-pass))
 
-
-
-;;overwride the luks-open proc
-
-(define (my-open-luks-device source targets)
-  "Return a gexp that maps SOURCE to TARGET as a LUKS device, using
-'cryptsetup'."
-  (with-imported-modules (source-module-closure
-                          '((gnu build file-systems)(ice-9 popen)(ice-9 rdelim)))
-    (match targets
-      ((target)
-       #~(let ((source #$(if (uuid? source)
-                             (uuid-bytevector source)
-                             source)))
-           ;; XXX: 'use-modules' should be at the top level.
-           (use-modules (rnrs bytevectors) ;bytevector?
-                        ((gnu build file-systems)
-                         #:select (find-partition-by-luks-uuid))
-			((ice-9 popen)
-			 #:select (open-pipe*))
-			((ice-9 rdelim)
-			 #:select (read-line)))
-	   
-           ;; Use 'cryptsetup-static', not 'cryptsetup', to avoid pulling the
-           ;; whole world inside the initrd (for when we're in an initrd).
-	   ;;; Redirecting cryptesetup stdin...
-	   ;;;; with-input-from-port redirects the thunk-process stdin to the given file
-	   ;;;; open-pipe* when OPEN_READ sets its output port to thunk-process output port,
-	   ;;;;  and inhereits the thunk-process stdin/input-port... is there an easier way
-	   ;;;;   while still using execvp?
-	   ;;;;NOTE-using with-input-from-port so the port can be non-buffering
-
-	    (define output-from-cryptsetup (with-input-from-port 
-	       (open-file "/sys/kernel/boot_params/setup_data/0/data" "r0") ; <--password from grub
-	      (lambda () (open-pipe* OPEN_READ #$(file-append cryptsetup-static "/sbin/cryptsetup")
-                           "open" "-d" "-" "--type" "luks"
-
-                           ;; Note: We cannot use the "UUID=source" syntax here
-                           ;; because 'cryptsetup' implements it by searching the
-                           ;; udev-populated /dev/disk/by-id directory but udev may
-                           ;; be unavailable at the time we run this.
-                           (if (bytevector? source)
-                               (or (let loop ((tries-left 10))
-                                     (and (positive? tries-left)
-                                          (or (find-partition-by-luks-uuid source)
-                                              ;; If the underlying partition is
-                                              ;; not found, try again after
-                                              ;; waiting a second, up to ten
-                                              ;; times.  FIXME: This should be
-                                              ;; dealt with in a more robust way.
-                                              (begin (sleep 1)
-                                                     (loop (- tries-left 1))))))
-                                   (error "LUKS partition not found" source))
-                               source)
-                             #$target))))
-	   
-           (eof-object? (read-line output-from-cryptsetup)))))))
-
 ;;needed access to private ref...
 (define flat-linux-module-directory (module-ref (resolve-module '(gnu system linux-initrd)) 'flat-linux-module-directory))
 
@@ -128,8 +70,7 @@
                       qemu-networking?
                       volatile-root?
                       (on-error 'debug))
-  "This is a copy of raw-initrd with hardcoded reference to the my-open-luks-device, 
-  anything in the gexp is added verbatim the initrd init script "
+  "This is a copy of raw-initrd - code changes are in (my mapped-devices)"
   (define device-mapping-commands
     ;; List of gexps to open the mapped devices.
     (map (lambda (md)
@@ -140,7 +81,7 @@
                   (targets (mapped-device-targets md))
                   (type    (mapped-device-type md))
                   (open    (mapped-device-kind-open type)))
-             ((module-ref (resolve-module '(my linux-initrd)) 'my-open-luks-device) source targets)))                       ;;if fail, hard code replace open here
+             (open source targets)))                       ;;if fail, hard code replace open here
          mapped-devices))
 
   (define kodir
@@ -175,7 +116,7 @@
            (lambda ()
              (set-path-environment-variable "PATH" '("bin" "sbin")
                                             '#$helper-packages)))
-
+	 
          (parameterize ((current-warning-port (%make-void-port "w")))
            (boot-system #:mounts
                         (map spec->file-system
