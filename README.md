@@ -11,7 +11,9 @@
 	- ~~TODO~~ - add options to zerofill setup_data after auto-pass, use proc/cmdline opt --zap
                - Setup_data may not be modified after grub hand-off, --zap cant happen till the initrd init script, so without ability to write to kernel memory (is it possible?) this TODO is a TODONT 
     - DONE - ~~reexport linux-initrd, and have only the auto-pass-initrd and my-open proc...~~
-  - at the end you will need to replace the device-mapping in system config with the luks-auto-pass-device-mapping, which is imported from (my linux-initrd) but the installation script doesnt know about it, and sets the core luks-mappings
+- example folder has an system.scm config to see changes necessary to reconigure 
+  - I have not yet tested a full install from the SC guix-installer iso generated from this repo...
+  - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** ill get back to you if my computer was nuked...
  
 
 # System Crafters Guix Installer
