@@ -40,7 +40,7 @@
   #:use-module (nongnu packages linux)
   #:use-module (guix)
   #:use-module (guix modules)
-  #:use-module (my linux-initrd)
+  #:use-module (my mapped-devices)
   #:export (installation-os-nonfree))
 
 (define-public grub-logger
@@ -63,11 +63,10 @@
   (operating-system
     (inherit installation-os)
     (kernel linux)
-    (initrd initrd-auto-pass)
     (firmware (list linux-firmware))
     (bootloader (bootloader-configuration
 		 (bootloader grub-bootloader-log)
-		 (target "dev/sda")))
+		 (target "/dev/sda")))
 
     ;; Add the 'net.ifnames' argument to prevent network interfaces
     ;; from having really long names.  This can cause an issue with

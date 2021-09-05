@@ -2,9 +2,7 @@
 - Thanks to [mtottenh](https://github.com/mtottenh/grub2/tree/boot_data) for the grub patch code!
 - Follow all the instructions from [SystemCrafters](#system-crafters-guix-installer) - follow the example/system.scm to add autopass functionality post system install
   - *Currently* - all it does is allow skip having to enter password twice
-  - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue... this appears after the premount call in the init script *Also it may just be a quirk in my system.scm, ymmv*
-  - The password is stored in setup_data, part of the linux boot-protocol... i.e this is not multiboot compliant.
-    - TODO fix e2fsck error, execvp cannot find the file, i.e. the initrd doesnt have the binary?
+  - The password is stored in setup_data, part of the linux boot-protocol... in the first link in the linked-list, represented in /sys/kernel/boot_params/setup_data/0/data file
     - TODO Integrate with installer script (i.e. add additional step to select autopass, and either use pin or not
 	  - Using the master branch on SC, I could add the bootloader changes, but the initrd dumped to guile rather than the installer
 	- TODO ???? encrypt the password with a pin

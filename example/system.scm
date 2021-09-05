@@ -7,7 +7,7 @@
 ;; by the graphical installer.
 ;;
 
-(use-modules (gnu) (guix packages) (gnu packages bootloaders) (nongnu packages linux) (my linux-initrd)) ;<----- include my liniux-initrd
+(use-modules (gnu) (guix packages) (gnu packages bootloaders) (nongnu packages linux) (my mapped-devices)) ;<----- include my mappped devices
 (use-service-modules
   cups
   desktop
@@ -21,7 +21,7 @@
     (inherit grub)
     (source (origin
               (inherit (package-source grub))
-               (patches (append '("<#### absolute path to guix-installer ####>/grub-add-setup-data-log.patch" ) (search-patches
+               (patches (append '("./grub-add-setup-data-log.patch" ) (search-patches    ;<-------- copy this patch to the dir with system.scm
                          "grub-efi-fat-serial-number.patch"
                          "grub-setup-root.patch")))))))
   
@@ -35,8 +35,7 @@
 
 
 (operating-system
- (kernel linux)
- (initrd initrd-auto-pass)					;<---------------------------- changed to initrd-auto-pass
+ (kernel linux)					
  (firmware (list linux-firmware))
   (locale "en_US.utf8")
   (timezone "America/Denver")
