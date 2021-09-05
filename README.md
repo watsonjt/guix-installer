@@ -1,6 +1,7 @@
 # Autopass
 - Thanks to [mtottenh](https://github.com/mtottenh/grub2/tree/boot_data) for the grub patch code!
 - Follow all the instructions from [SystemCrafters](#system-crafters-guix-installer) - follow the example/system.scm to add autopass functionality post system install
+  - *Currently* - all it does is allow skip having to enter password twice
   - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue... this appears after the premount call in the init script *Also it may just be a quirk in my system.scm, ymmv*
   - The password is stored in setup_data, part of the linux boot-protocol... i.e this is not multiboot compliant.
     - TODO fix e2fsck error, execvp cannot find the file, i.e. the initrd doesnt have the binary?
@@ -10,7 +11,8 @@
 		- Requires pin-set in grub, i.e. custom command/module that will call boot after getting pin and encrypting the setup_data 0 entry
 		- OR it could be implemented as hard-coded pin from the installer, risk is someone could extract it from the grub image.
 		- Maybe could put the pin in the mmaped BIOS keyboard buffer? Read it in initrd, and zero it out (can we write to it?)
-		- If the above cant be done, then the pin has to be entered twice, which defeats the purpose of this repo...
+		- If the above cant be done, then the pin has to be entered twice, which defeats the purpose of this repo... except for those of us with long passwords...
+	- TODO write a service/daemon that allows either direct or pin-based transfer to the programs that require the long password.
 - example folder has a system.scm config to see changes necessary to reconfigure 
   - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** it does not work...yet. 
 
