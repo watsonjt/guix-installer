@@ -6,8 +6,9 @@
     - TODO Integrate with installer script
 	  - Add install-step to enable autopass, which should simply replace the mapped-devices of the generated initrd
 	- TODO encrypt the password with a pin
-		- ^A in grub before timeout, launch pin-entry, encrypt password, put --pinap
-		- ^Z in grub before timeout, puts --zap on linux command-line, initrd reads it and zerofilles setup/data using a custom kernel module.
+		- ^A in grub before timeout, launch pin-entry, encrypt password, put --pinap on the cmdline, initrd reads setup_data/1/data,  uses pin, fills it with zero
+		- ^Z in grub before timeout, puts --zap on linux command-line, initrd reads it and zerofills setup/data using a custom kernel module.
+		- modifying setup_data requires ring0, custom kernel module only loaded during initrd? 
 	- TODO write a service/daemon that allows either direct or pin-based transfer to the programs that require the long password.
 - example folder has a system.scm config to see changes necessary to reconfigure 
   - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** it does not work...yet. 
