@@ -1,15 +1,13 @@
 # Autopass
 - Thanks to [mtottenh](https://github.com/mtottenh/grub2/tree/boot_data) for the grub patch code!
-- Follow all the instructions from [SystemCrafters](#system-crafters-guix-installer) - follow the example/system.scm to add autopass functionality post system install
+- Follow all the instructions from [SystemCrafters](#system-crafters-guix-installer) - follow the example/system.scm to add autopass functionality **post system install**
   - *Currently* - all it does is allow skip having to enter password twice
   - The password is stored in setup_data, part of the linux boot-protocol... in the first link in the linked-list, represented in /sys/kernel/boot_params/setup_data/0/data file
-    - TODO Integrate with installer script (i.e. add additional step to select autopass, and either use pin or not
-	  - Using the master branch on SC, I could add the bootloader changes, but the initrd dumped to guile rather than the installer
-	- TODO ???? encrypt the password with a pin
-		- Requires pin-set in grub, i.e. custom command/module that will call boot after getting pin and encrypting the setup_data 0 entry
-		- OR it could be implemented as hard-coded pin from the installer, risk is someone could extract it from the grub image.
-		- Maybe could put the pin in the mmaped BIOS keyboard buffer? Read it in initrd, and zero it out (can we write to it?)
-		- If the above cant be done, then the pin has to be entered twice, which defeats the purpose of this repo... except for those of us with long passwords...
+    - TODO Integrate with installer script
+	  - Add install-step to enable autopass, which should simply replace the mapped-devices of the generated initrd
+	- TODO encrypt the password with a pin
+		- ^A in grub before timeout, launch pin-entry, encrypt password, put --pinap
+		- ^Z in grub before timeout, puts --zap on linux command-line, initrd reads it and zerofilles setup/data using a custom kernel module.
 	- TODO write a service/daemon that allows either direct or pin-based transfer to the programs that require the long password.
 - example folder has a system.scm config to see changes necessary to reconfigure 
   - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** it does not work...yet. 
