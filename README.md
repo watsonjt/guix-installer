@@ -1,23 +1,18 @@
 # Autopass
 - Thanks to [mtottenh](https://github.com/mtottenh/grub2/tree/boot_data) for the grub patch code!
-- Follow all the instructions from SystemCrafters - follow the example/system.scm to add functionality post system install
-  - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue... this appears after the premount call in the init script.
-    - This may be due to type mismatch in the file-system configuration in my system config and the device-mapping conf...
+- Follow all the instructions from [SystemCrafters](#system-crafters-guix-installer) - follow the example/system.scm to add autopass functionality post system install
+  - **NOTE** There is an error in the initrd call to e2fsck that dumps to the guile repl... just ^D or ,q the boot process will continue... this appears after the premount call in the init script *Also it may just be a quirk in my system.scm, ymmv*
   - The password is stored in setup_data, part of the linux boot-protocol... i.e this is not multiboot compliant.
-    - DONE - ~~chmod so only root can read~~
-	- DONE - ~~Password should always be stored in ..setup_data/0~~
-     - ~~REBOOT the computer if you mistype the password as it is assumed in the first file, setup_data is added for each password entry i.e. ..0/ ..1/ ..2/~~
+    - TODO fix e2fsck error, execvp cannot find the file, i.e. the initrd doesnt have the binary?
+    - TODO Integrate with installer script (i.e. add additional step to select autopass, and either use pin or not
+	  - Using the master branch on SC, I could add the bootloader changes, but the initrd dumped to guile rather than the installer
 	- TODO ???? encrypt the password with a pin
 		- Requires pin-set in grub, i.e. custom command/module that will call boot after getting pin and encrypting the setup_data 0 entry
+		- OR it could be implemented as hard-coded pin from the installer, risk is someone could extract it from the grub image.
 		- Maybe could put the pin in the mmaped BIOS keyboard buffer? Read it in initrd, and zero it out (can we write to it?)
 		- If the above cant be done, then the pin has to be entered twice, which defeats the purpose of this repo...
-	- ~~TODO~~ - add options to zerofill setup_data after auto-pass, use proc/cmdline opt --zap
-               - Setup_data may not be modified after grub hand-off, --zap cant happen till the initrd init script, so without ability to write to kernel memory (is it possible?) this TODO is a TODONT 
-    - DONE - ~~reexport linux-initrd, and have only the auto-pass-initrd and my-open proc...~~
-- example folder has an system.scm config to see changes necessary to reconfigure 
-  - I have not yet tested a full install from the SC guix-installer iso generated from this repo...
-  - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** ill get back to you if my computer was nuked...
- 
+- example folder has a system.scm config to see changes necessary to reconfigure 
+  - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** it does not work...yet. 
 
 # System Crafters Guix Installer
 
