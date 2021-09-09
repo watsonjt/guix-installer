@@ -23,7 +23,6 @@
   #:use-module (gnu system)
   #:use-module (gnu system file-systems)
   #:use-module (gnu system keyboard)
-  #:use-module (gnu system install)
   #:use-module (gnu bootloader)
   #:use-module (gnu bootloader grub)
   #:use-module (gnu packages)
@@ -40,7 +39,7 @@
   #:use-module (nongnu packages linux)
   #:use-module (guix)
   #:use-module (guix modules)
-  #:use-module (my mapped-devices)
+  #:use-module (my system install)
   #:export (installation-os-nonfree))
 
 (define-public grub-logger
@@ -61,7 +60,7 @@
 
 (define installation-os-nonfree
   (operating-system
-    (inherit installation-os)
+    (inherit my-installation-os)
     (kernel linux)
     (firmware (list linux-firmware))
     (bootloader (bootloader-configuration
@@ -73,16 +72,16 @@
     ;; wpa_supplicant when you try to connect to a wifi network.
     (kernel-arguments '("quiet" "modprobe.blacklist=radeon" "net.ifnames=0"))
 
-    (services
-     (cons*
-      ;; Include the channel file so that it can be used during installation
-      (simple-service 'channel-file etc-service-type
-                      (list `("channels.scm" ,(local-file "channels.scm"))))
-      (operating-system-user-services installation-os)))
+    ;; (services
+    ;;  (cons*
+    ;;   ;; Include the channel file so that it can be used during installation
+    ;;   (simple-service 'channel-file etc-service-type
+    ;;                   (list `("channels.scm" ,(local-file "channels.scm"))))
+    ;;   (operating-system-user-services my-installation-os)))
 
     ;; Add some extra packages useful for the installation process
     (packages
      (append (list git curl stow vim emacs-no-x-toolkit)
-             (operating-system-packages installation-os)))))
+             (operating-system-packages my-installation-os)))))
 
 installation-os-nonfree
