@@ -13,6 +13,24 @@
 - example folder has a system.scm config to see changes necessary to reconfigure 
   - **DO NOT USE THIS TO INSTALL GUIX SYSTEM** it does not work...yet. 
 
+# Notes on TODOs
+
+Integrate installer
+- location of necessary change
+/run/current-system/profile/share/guile/site/3.0/gnu/installer/parted.scm:1343
+
+the newt-installer is set in the installer-program, produces a gexp that is
+used in the service-list of the installation-os... the above line of code needs 
+to be changed to the autopass device mapping.
+
+- have tried
+1. reflection, replacing function call before installer-program gexpr
+2. reflection, replacing function call in the gexp
+3. custom installer, replacing just those parts necessary to get to the above line
+4. overlay fs with my custom files overlaying the same files from (3.) ...
+the guix-daemon socket file no longer existed once chrooting into the mounted overlay ?!?!?! :(
+5... backburner, come back to it in week or two. DRY.
+
 # System Crafters Guix Installer
 
 This repository runs _automated CI builds_ to produce a
